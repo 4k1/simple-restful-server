@@ -446,7 +446,7 @@
             if ($privlevel == "0") return 0;
             
             // get from CSYS_GRANTS
-            $sql = "SELECT api FROM CSYS_GRANTS WHERE usertoken = ?";
+            $sql = "SELECT api FROM CSYS_GRANTS WHERE usertoken = ? OR usertoken = '*'";
             if ($stmt = $my->prepare($sql)) {
 
                 // query

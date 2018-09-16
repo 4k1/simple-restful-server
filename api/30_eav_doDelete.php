@@ -10,6 +10,15 @@
     
         // POST /doDelete
         function post_config() { return ["requireAppkey" => true, "requireUserAuth" => true]; }
+        function post_privkey($api, $request, $privkey) { 
+
+            // Get request json
+            $obj_json = new \jsonBody($request);
+            $post_json = $obj_json->getArray();
+            
+            return $privkey . "::" . $post_json["gkey"];
+
+        }
         function post($api, $request, &$response) {
             
             // Get request json

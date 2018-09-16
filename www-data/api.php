@@ -166,6 +166,23 @@
                         error_log("[api.php] > Current session was expired.");
                         throw new Exception(SESSION_ERROR);
                     }
+                    
+                    // Check user privileges
+                    if (!($privlevel == "1")) {  // without site owner = privlevel: 1 (Owner)
+                    
+                        // make privkey
+                        $privkey = "priv." . strtolower(str_replace("/", ".", $p_paths)) . "." . $http_method;
+                        $privkey_method = $http_method . "_privkey";
+                        if (method_exists($api_class, $privkey_method)) $privkey = $api_class::$privkey_method($p_all_paths, $raw_request, $privkey);
+                    
+                        // check privkey
+                        global $bundled_privkeys;
+                        if (!in_array($privkey, $privs, TRUE) && !in_array($privkey, $bundled_privkeys, TRUE)) {
+                            error_log("[** PRIV **] Missing privilege. atoken = " . $atoken . ", privkey = " . $privkey);
+                            throw new Exception(ACCESS_DENIED);
+                        }
+                    }
+                    
                 }
                 
                 // Call function (ex. GET /ping ... ping\MethodHandler::get() )
@@ -198,6 +215,10 @@
         $fx_class_recursive_resolve($p_fullp, $raw_request, $jary_base_response);
         
     } catch (Exception $e) {
+
+        // logging
+        //error_log("[api.php] > API error. > " . $e);
+        
         if ($errs[$e->getMessage()] != null) {
             $jary_base_response["status"] = $e->getMessage();
             $jary_base_response["description"] = $errs[$e->getMessage()];
