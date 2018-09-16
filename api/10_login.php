@@ -36,7 +36,10 @@
             // try login
             $atoken = "";
             $r = \userprivs\login($mybase, $uid, $upw, $post_json["ip"], $post_json["ua"], $atoken);
-            if ($r != 0) throw new \Exception(LOGIN_ERROR);
+            if ($r != 0) {
+                error_log("Login failed. r = " . $r);
+                throw new \Exception(LOGIN_ERROR);
+            }
             
             // return User-token
             $response["authtoken"] = $atoken;

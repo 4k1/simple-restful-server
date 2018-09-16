@@ -37,3 +37,15 @@
             return false;
         }
     }
+    
+    // Email check function
+    function isCorrectEmail($var) {
+        $var = trim($var);
+        if (strlen($var) == 0) {
+            return true;
+        } elseif (preg_match("/^[a-zA-Z0-9._@+]+$/", $var)) {
+            return true;
+        } else {
+            return false;
+        }
+    }

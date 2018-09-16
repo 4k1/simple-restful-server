@@ -15,7 +15,14 @@
     const TOKEN_MISMATCH    = 17; $errs[TOKEN_MISMATCH]      = "Update token mismatch. This data has been already updated by another operator.";
     const LOGIN_ERROR       = 18; $errs[LOGIN_ERROR]         = "Login failed.";
     const SESSION_ERROR     = 19; $errs[SESSION_ERROR]       = "Cannot update current session status.";
+    const ACCESS_DENIED     = 20; $errs[ACCESS_DENIED]       = "Access denied.";
     const INTERNAL          = 96; $errs[INTERNAL]            = "Internal error.";
     const PLUGIN_ERR        = 97; $errs[PLUGIN_ERR]          = "Plugin returns an error.";
     const SECURITY_ERROR    = 99; $errs[SECURITY_ERROR]      = "huh?";
 
+    // Bundled api privilege keys for require userauth APIs
+    $bundled_privkeys = [
+        'priv.logout.get',
+        'priv.privileges.extendtoken.get',
+    ];
+    

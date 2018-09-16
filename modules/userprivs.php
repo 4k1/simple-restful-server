@@ -240,12 +240,14 @@
         
         try {
             
+            // Check ID format
+            if (!isCorrectEmail($id)) return -2;
+            
             // Get MySQLi instance
             $my = $mybase->getMySQLi();
             
             // pw initialize
             $pwhash = hash(config("security.hash_algo", "sha512"), $pw . config("security.pwsalt") . $id);
-            $pw = "";
             
             // get user login metas
             $sql = "SELECT fullname, usertoken, tries, locked FROM CSYS_USERS WHERE userid = ?";
@@ -263,6 +265,7 @@
                 $stmt->close();
                 
                 if ($locked != "0") {
+                    error_log("Lock outed user. id = " . $id);
                     return -1;
                 }
                 
@@ -271,27 +274,81 @@
             }
             
             // check correct login
-            $sql = "SELECT count(*) FROM CSYS_USERS WHERE userid = ? AND pwhash = ?";
-            $loggedin = false;
-            if ($stmt = $my->prepare($sql)) {
+            if (config("userprivs.auth.ldap.enable", 0) == 0) {
+                // login via database
+                $sql = "SELECT count(*) FROM CSYS_USERS WHERE userid = ? AND pwhash = ?";
+                $loggedin = false;
+                if ($stmt = $my->prepare($sql)) {
+                    
+                    // query
+                    $stmt->bind_param("ss", $id, $pwhash);
+                    $stmt->execute();
+                    
+                    // fetch
+                    $cnt = 0;
+                    $stmt->bind_result($cnt);
+                    $stmt->fetch();
+                    $stmt->close();
+                    
+                    if ($cnt != "0") {
+                        $loggedin = true;
+                    }
+                    
+                } else {
+                    throw new \Exception();
+                }
+            } else {
                 
-                // query
-                $stmt->bind_param("ss", $id, $pwhash);
-                $stmt->execute();
-                
-                // fetch
-                $cnt = 0;
-                $stmt->bind_result($cnt);
-                $stmt->fetch();
-                $stmt->close();
-                
-                if ($cnt != "0") {
+                try {
+                    // login via LDAP
+                    $ld_host = config("userprivs.auth.ldap.dchost");
+                    $ld_port = config("userprivs.auth.ldap.dcport", "389");
+                    $ld_rdn  = config("userprivs.auth.ldap.rdn");
+                    $ld_dom  = config("userprivs.auth.ldap.domain");
+                    $ld_pass = $pw;
+                    $ld_conn = ldap_connect($ld_host, $ld_port);
+                    if (!$ld_conn) {
+                        error_log("Cannot connect LDAP server on login API.");
+                        throw new \Exception();
+                    }
+                    error_log("Connected to LDAP server.");
+                    ldap_set_option($ld_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
+                    ldap_set_option($ld_conn, LDAP_OPT_REFERRALS, 0);
+                    
+                    // make rdn
+                    $ld_rdn_e = "CN=" . $id . ",CN=Users," . $ld_rdn;
+                    
+                    // authentication
+                    $bind = ldap_bind($ld_conn, $ld_dom . "\\" . $id, $pw);
+                    if (!$bind) {
+                        error_log("LDAP handling error.");
+                        return -2;
+                    }
+                    error_log("LDAP binded.");
+                    
+                    // Get user information
+                    $ld_ui_rdn    = $ld_rdn;
+                    $ld_ui_filter = "(|(sn=$id*)(givenname=$id*))";//" . $id . ")";
+                    $ld_ui_attr   = array("ou","sn","givenname","displayname");
+                    $ld_ui_cursor = ldap_search($ld_conn, $ld_ui_rdn, $ld_ui_filter, $ld_ui_attr);
+                    $ld_ui_data   = ldap_get_entries($ld_conn, $ld_ui_cursor);
+                    $fullname = $ld_ui_data[0]["displayname"][0];
+                    
+                    // Logged in
+                    error_log("LDAP Authenticated : " . $fullname);
+                    ldap_close($ld_conn);
                     $loggedin = true;
+
+                } catch (\Exception $e) {
+                    error_log("Error has occurred during performing a login sequence.");
+                    throw new \Exception();
                 }
                 
-            } else {
-                throw new \Exception();
+                
             }
+
+            // pw clear from memory
+            $pw = "";
 
             // increment count of login tried
             if ($loggedin) {
@@ -302,11 +359,11 @@
             }
             
             // update flags
-            $sql = "UPDATE CSYS_USERS SET tries = ?, locked = ? WHERE userid = ?";
+            $sql = "UPDATE CSYS_USERS SET tries = ?, locked = ?, fullname = ? WHERE userid = ?";
             if ($stmt = $my->prepare($sql)) {
                 
                 // query
-                $stmt->bind_param("sss", $tries, $locked, $id);
+                $stmt->bind_param("ssss", $tries, $locked, $fullname, $id);
                 $stmt->execute();
                 if ($stmt->error != "") {
                     throw new \Exception();
