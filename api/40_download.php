@@ -10,6 +10,10 @@
     
         // GET /download/foo
         function get_config() { return ["requireAppkey" => true, "requireUserAuth" => true]; }
+        function get_privkey($api, $request, $privkey) { 
+            // privkey = priv.api.download or priv.api.download::<filename>
+            return array($privkey, $privkey . "::" . $api[1]);
+        }
         function get($api, $request, &$response) {
             
             // Connect to database

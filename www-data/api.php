@@ -173,14 +173,27 @@
                         // make privkey
                         $privkey = "priv." . strtolower(str_replace("/", ".", $p_paths)) . "." . $http_method;
                         $privkey_method = $http_method . "_privkey";
-                        if (method_exists($api_class, $privkey_method)) $privkey = $api_class::$privkey_method($p_all_paths, $raw_request, $privkey);
-                    
+                        if (method_exists($api_class, $privkey_method)) {
+                            $privkey_arr = $api_class::$privkey_method($p_all_paths, $raw_request, $privkey);
+                        } else {
+                            $privkey_arr = array($privkey);
+                        }
+                        
                         // check privkey
                         global $bundled_privkeys;
-                        if (!in_array($privkey, $privs, TRUE) && !in_array($privkey, $bundled_privkeys, TRUE)) {
-                            error_log("[** PRIV **] Missing privilege. atoken = " . $atoken . ", privkey = " . $privkey);
+                        $grant_whitelisted = false;
+                        foreach ($privkey_arr as $pk) {
+                            if (in_array($pk, $privs, TRUE) || in_array($pk, $bundled_privkeys, TRUE)) {
+                                $grant_whitelisted = true;
+                            }
+                        }
+                        if (!$grant_whitelisted) {
+                            foreach ($privkey_arr as $pk) {
+                                error_log("[** PRIV **] Missing privilege. atoken = " . $atoken . ", privkey = " . $pk);
+                            }
                             throw new Exception(ACCESS_DENIED);
                         }
+
                     }
                     
                 }

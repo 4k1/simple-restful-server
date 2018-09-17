@@ -16,7 +16,7 @@
             $obj_json = new \jsonBody($request);
             $post_json = $obj_json->getArray();
             
-            return $privkey . "::" . $post_json["gkey"];
+            return array($privkey, $privkey . "::" . $post_json["gkey"]);
 
         }
         function post($api, $request, &$response) {
