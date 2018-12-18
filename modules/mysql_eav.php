@@ -122,7 +122,7 @@
 
             
         // General fetch function
-        /* throwable */ function general_fetch($post_json, $my, $append_sql, &$updtoken, $gkey, $parent = "", $id = "") {
+        /* throwable */ function general_fetch($post_json, $my, $append_sql, &$updtoken, $gkey, $parent = "", $id = "", $override_sql = "") {
     
             // Check params
             if (!isCorrectID($updtoken) || !isCorrectID($gkey) || !isCorrectID($parent) || !isCorrectID($id)) throw new Exception(INTERNAL);
@@ -161,6 +161,12 @@
             $sql_whr = "WHERE delf = 0 AND rdate IS NULL " . $sql_key . $append_sql;
             $sql_odr = "ORDER BY rkey desc, dkey";
             $sql_etc = "";
+            if ($override_sql != "") {
+                $sql_whr = "";
+                $sql_odr = "";
+                $sql_etc = $override_sql;
+            }
+
             
             // Callback - onBeforeSelectSQL
             $cbarr = array("dbi" => $my, "json" => $post_json, "columns" => $sql_col, "from" => $sql_frm, "where" => $sql_whr, "order" => $sql_odr, "etc" => $sql_etc);
