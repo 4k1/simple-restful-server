@@ -399,6 +399,7 @@
             return -2;
 
         } catch (\Exception $e) {
+            error_log($e->getMessage());
             return -9;
         }
         
@@ -443,7 +444,7 @@
                 \userprivs\_log(LOGID_UP, "-", "Error on prepare of select. 1");
                 return -9;
             }
-            if ($privlevel == "0") return 0;
+            if ($privlevel == "1") return 0;
             
             // get from CSYS_GRANTS
             $sql = "SELECT api FROM CSYS_GRANTS WHERE usertoken = ? OR usertoken = '*'";
