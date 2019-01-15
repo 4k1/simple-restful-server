@@ -168,7 +168,7 @@
             }
 
             
-            // Callback - onBeforeSelectSQL
+            // Callback - onConstractSelectSQL
             $cbarr = array("dbi" => $my, "json" => $post_json, "columns" => $sql_col, "from" => $sql_frm, "where" => $sql_whr, "order" => $sql_odr, "etc" => $sql_etc);
             callbackTo("onConstractSelectSQL", $cbarr, $post_json["gkey"]);
             $sql = $cbarr["columns"] . " " . $cbarr["from"] . " " . $cbarr["where"] . " " . $cbarr["order"] . " " . $cbarr["etc"];

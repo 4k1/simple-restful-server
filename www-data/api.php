@@ -98,7 +98,13 @@
     try {
         
         // Check URL
-        if (!preg_match("/^[a-zA-Z0-9\/_.]+$/", $_SERVER['REQUEST_URI'])) {
+        $qvp = strpos($_SERVER['REQUEST_URI'], "?");
+        if ($qvp === false) {
+            $uri_src = $_SERVER['REQUEST_URI'];
+        } else {
+            $uri_src = substr($_SERVER['REQUEST_URI'], 0, $qvp);
+        }
+        if (!preg_match("/^[a-zA-Z0-9\/_.]+$/", $uri_src)) {
             error_log("[api.php] > URL Error.");
             throw new Exception(SECURITY_ERROR);
         }
@@ -111,8 +117,8 @@
         }            
         
         // Parse RESTful API
-        $p_fullp        = substr($_SERVER['REQUEST_URI'], 1);
-        $p_all_paths    = explode('/', $p_fullp);
+        $p_fullp        = substr($uri_src, 1);
+        $p_all_paths    = explode('/', $uri_src);
         $p_paths        = $p_all_paths;
     
         // Callback - onStart
@@ -210,7 +216,7 @@
             } catch (Error $e) {
                 
                 // logging
-                //error_log("[api.php] > API error. [" . $api_class_id . "] > " . $e);
+                error_log("[api.php] > API error. [" . $api_class_id . "] > " . $e);
                 
                 // Declease class path
                 $lpos = strrpos($p_paths, "/");
