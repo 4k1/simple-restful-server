@@ -36,9 +36,23 @@
             }
             if (substr($f_dir, -1) != "/") $f_dir .= "/";
             
+            // Check ext whitelist
+            $previewable = false;
+            $ext_ct = "";
+            $ext_wl = array("jpg", "jpe", "jpeg", "gif", "bmp", "png", "ico", "txt", "pdf", "json", "xml", "swf", "flv", "svg", "svgz", "mp3");
+            $ext = strtolower(substr($api[1], strrpos($api[1], '.') + 1));
+            if (in_array($ext, $ext_wl)) {
+                $previewable = true;
+                $ext_ct = mime_content_type($f_dir . $api[1]);
+            }
+            
             // Readfile
-            header("Content-Type: application/force-download");
-            header("Content-disposition: attachment; filename=\"" . $api[1] . "\"");
+            if ($_GET["preview"] == "1" && $previewable) {
+                header("Content-Type: " . $ext_ct);
+            } else {
+                header("Content-Type: application/force-download");
+                header("Content-disposition: attachment; filename=\"" . $api[1] . "\"");
+            }
             readfile($f_dir . $api[1]);
             
             // No json response
