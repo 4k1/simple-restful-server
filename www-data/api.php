@@ -118,7 +118,7 @@
         
         // Parse RESTful API
         $p_fullp        = substr($uri_src, 1);
-        $p_all_paths    = explode('/', $uri_src);
+        $p_all_paths    = explode('/', $p_fullp);
         $p_paths        = $p_all_paths;
     
         // Callback - onStart
